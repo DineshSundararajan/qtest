@@ -23,6 +23,12 @@ import json
 next_token = None
 output_columns_by_dataset = {}  # Initialize an empty dictionary to store output columns by dataset ARN
 
+next_token = None
+output_columns_by_dataset = {}  # Initialize an empty dictionary to store output columns by dataset ARN
+dataset_arns = []  # List to store dataset ARNs
+dataset_names = []  # List to store dataset names
+output_columns_list = []  # List to store output columns
+
 while True:
     try:
         if next_token:
@@ -42,11 +48,10 @@ while True:
                     output_columns = dds_response['DataSet']['OutputColumns']
                     if output_columns:
                         column_names = {column.get('Name') for column in output_columns}  # Convert to set
-                        # Check if the dataset ARN already exists in the dictionary
-                        if dataset_arn in output_columns_by_dataset:
-                            output_columns_by_dataset[dataset_arn].update(column_names)  # Use update to add elements to the set
-                        else:
-                            output_columns_by_dataset[dataset_arn] = column_names
+                        output_columns_by_dataset[dataset_arn] = (dataset_name, column_names)
+                    else:
+                        output_columns_by_dataset[dataset_arn] = {dataset_name: column_names}  # Create a new dictionary for dataset_name and column_names
+
             except Exception as e:
                 print(f"Error describing dataset {dataset_id}: {str(e)}")
 
@@ -139,9 +144,9 @@ if __name__ == '__main__':
     main()
 
 
-# Convert dictionaries to dataframes
-df1 = pd.DataFrame(output_columns_by_dataset.items(), columns=['dataset_arn', 'columns_output'])
 df2 = pd.DataFrame(columns_by_dataset_arn.items(), columns=['dataset_arn', 'columns_arn'])
+df1_data = [(dataset_arn, dataset_name, columns) for dataset_arn, (dataset_name, columns) in output_columns_by_dataset.items()]
+df1 = pd.DataFrame(df1_data, columns=['dataset_arn', 'dataset_name', 'columns_output'])
 
 
 # Merge dataframes on 'dataset_arn'
@@ -193,15 +198,11 @@ with st.container():
             """
         )
 
-    
 # List of columns you want to display
-columns_to_display = ['dataset_arn', 'difference']
+columns_to_display = ['dataset_arn','dataset_name' ,'difference']
 
 # Subsetting the DataFrame to include only the selected columns
 selected_columns_df = differences_df[columns_to_display]
-
-
-
 
 with st.container():
     image_column, text_column = st.columns((1, 2))
