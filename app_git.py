@@ -114,8 +114,13 @@ def describe_analysis(quicksight_client, account_id, analysis_id):
     #print(response['Definition'])
     return response['Definition']
 
-def main():
 
+columns_by_dataset_arn = {}  # Initialize an empty dictionary to store output columns by dataset ARN
+dataset_arns_list = []  # List to store dataset ARNs
+analysis_names_list = []  # List to store analysis names
+output_columns_list = []  # List to store output columns
+
+def main():
     # Call the function to retrieve all analyses
     all_analyses = list_all_analyses(quicksight_client, account_id)
 
@@ -139,12 +144,18 @@ def main():
             
             # Add the column names to the dataset ARN's set of used columns
             columns_by_dataset_arn[dataset_arn].update(column_names)
+            
+            # Store dataset ARN, analysis name, and output columns in lists
+            dataset_arns_list.append(dataset_arn)
+            analysis_names_list.append(name)
+            output_columns_list.append(column_names)
 
 if __name__ == '__main__':
     main()
 
 
-df2 = pd.DataFrame(columns_by_dataset_arn.items(), columns=['dataset_arn', 'columns_arn'])
+df2_data = [(dataset_arn, analysis_name, columns) for dataset_arn, analysis_name, columns in zip(dataset_arns_list, analysis_names_list, output_columns_list)]
+df2 = pd.DataFrame(df2_data, columns=['dataset_arn', 'analysis_name', 'columns_arn'])
 df1_data = [(dataset_arn, dataset_name, columns) for dataset_arn, (dataset_name, columns) in output_columns_by_dataset.items()]
 df1 = pd.DataFrame(df1_data, columns=['dataset_arn', 'dataset_name', 'columns_output'])
 
@@ -199,23 +210,9 @@ with st.container():
         )
 
 # List of columns you want to display
-columns_to_display = ['dataset_arn','dataset_name' ,'difference']
+columns_to_display = ['dataset_arn','dataset_name' ,'analysis_name','difference']
 
 # Subsetting the DataFrame to include only the selected columns
 selected_columns_df = differences_df[columns_to_display]
-
-with st.container():
-    image_column, text_column = st.columns((1, 2))
-    
-    with text_column:
-        st.subheader("How To Add A Dataframe To Your Streamlit App")
-        st.write(
-            """
-            Want to add a contact form to your Streamlit website?
-            In this video, I'm going to show you how to implement a contact form in your Streamlit app using the free service ‘Form Submit’.
-            """
-        )
-        st.markdown("[Watch Video...](https://youtu.be/FOULV9Xij_8)")
-
 
 st.dataframe(selected_columns_df )
