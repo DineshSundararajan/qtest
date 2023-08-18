@@ -210,7 +210,7 @@ with st.container():
         )
 
 # List of columns you want to display
-columns_to_display = ['dataset_arn','dataset_name' ,'analysis_name','difference']
+columns_to_display = ['dataset_arn','dataset_name' ,'difference']
 
 # Subsetting the DataFrame to include only the selected columns
 selected_columns_df = differences_df[columns_to_display]
